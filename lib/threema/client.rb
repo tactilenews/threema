@@ -8,7 +8,6 @@ require 'threema/exceptions'
 
 class Threema
   class Client
-    FINGERPRINT = 'a6840a28041a1c43d90c21122ea324272f5c90c82dd64f52701f3a8f1a2b395b'.freeze
     API_URL     = 'https://msgapi.threema.ch'.freeze
 
     class << self
@@ -94,22 +93,8 @@ class Threema
 
     def request_https(uri, req)
       http = Net::HTTP.new(uri.host, uri.port).tap do |config|
-        # SSL activation and HTTP Public Key Pinning - yay!
-        # taken and inspired by:
-        # http://stackoverflow.com/a/22108461
         config.use_ssl = true
-
         config.verify_mode = OpenSSL::SSL::VERIFY_PEER
-
-        config.verify_callback = lambda do |preverify_ok, cert_store|
-          return false unless preverify_ok
-          end_cert = cert_store.chain[0]
-          return true unless end_cert.to_der == cert_store.current_cert.to_der
-          return true unless @public_key_pinning
-
-          remote_fingerprint = OpenSSL::Digest::SHA256.hexdigest(end_cert.to_der)
-          remote_fingerprint == FINGERPRINT
-        end
       end
 
       # for those special moments...
